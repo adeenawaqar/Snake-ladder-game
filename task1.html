@@ -11,7 +11,6 @@
 
   body {
     margin: 0;
-    /* Modern Gradient Background */
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     font-family: 'Poppins', sans-serif;
     display: flex;
@@ -33,7 +32,6 @@
     text-shadow: 0 4px 10px rgba(0,0,0,0.3);
   }
 
-  /* Main Container with Glassmorphism */
   #game-container {
     display: flex;
     flex-wrap: wrap;
@@ -72,13 +70,12 @@
     font-weight: 600;
   }
 
-  /* Checkerboard Colors simplified to basic odd/even */
-  .cell:nth-child(odd) { background-color: #e3f2fd; } /* Light Blue */
-  .cell:nth-child(even) { background-color: #ffffff; } /* White */
+  .cell:nth-child(odd) { background-color: #e3f2fd; } 
+  .cell:nth-child(even) { background-color: #ffffff; } 
 
   .snake {
     position: absolute;
-    stroke: #ff4081; /* Hot Pink Snake */
+    stroke: #ff4081; 
     stroke-width: 6;
     stroke-linecap: round;
     fill: none;
@@ -87,7 +84,7 @@
   
   .ladder {
     position: absolute;
-    stroke: #ff9800; /* Orange Ladder */
+    stroke: #ff9800; 
     stroke-width: 6;
     stroke-linecap: round;
     fill: none;
@@ -220,7 +217,6 @@
     line-height: 1.4;
   }
 
-  /* Tokens */
   .token {
     position: absolute;
     width: 24px;
@@ -228,13 +224,12 @@
     border-radius: 50%;
     border: 3px solid #fff;
     box-shadow: 0 3px 8px rgba(0,0,0,0.4);
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy transition */
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
     z-index: 100;
   }
   .token.player1 { background: #ff5252; }
   .token.player2 { background: #448aff; }
 
-  /* Responsive */
   @media (max-width: 900px) {
     header { font-size: 2rem; }
     #game-container {
@@ -289,7 +284,6 @@
 
 <script>
 (() => {
-  // 1. Zaroori Elements aur Game State Variables
   const board = document.getElementById('board');
   const rollBtn = document.getElementById('roll-btn');
   const dice = document.getElementById('dice');
@@ -298,9 +292,7 @@
   const player2PosSpan = document.getElementById('player2-pos');
 
   const BOARD_SIZE = 100;
-  // Snakes: Head (Start) -> Tail (End)
   const snakes = { 16: 6, 48: 26, 49: 11, 56: 53, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 98: 78 };
-  // Ladders: Bottom (Start) -> Top (End)
   const ladders = { 1: 38, 4: 14, 9: 31, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 80: 100 };
 
   const players = [
@@ -309,14 +301,12 @@
   ];
   let currentPlayerIndex = 0;
   let gameOver = false;
-  const tokens = {}; // Tokens ko store karne ka object
+  const tokens = {}; 
 
-  // 2. Board Banana (Creating the Board)
   function createBoard() {
     board.innerHTML = '';
     for (let row = 9; row >= 0; row--) {
       for (let col = 0; col < 10; col++) {
-        // Zigzag number calculation
         let cellNum = row % 2 === 0 ? (row * 10 + col + 1) : (row * 10 + (9 - col) + 1);
         const cell = document.createElement('div');
         cell.classList.add('cell');
@@ -327,22 +317,19 @@
     }
   }
 
-  // 3. Coordinate Nikaalna (Get Position for Token/Lines)
   function getCellCoordinates(cellNum) {
     const zeroIndex = cellNum - 1;
     const row = Math.floor(zeroIndex / 10);
     const col = row % 2 === 0 ? zeroIndex % 10 : 9 - (zeroIndex % 10);
     const cellSize = board.clientWidth / 10;
     return {
-      x: col * cellSize + cellSize / 2, // Center X coordinate
-      y: (9 - row) * cellSize + cellSize / 2 // Center Y coordinate
+      x: col * cellSize + cellSize / 2, 
+      y: (9 - row) * cellSize + cellSize / 2 
     };
   }
 
-  // 4. Snakes aur Ladders Draw Karna (Drawing SVG Paths)
   let svgOverlay;
   function createSVGOverlay() {
-    // Canvas banana jahan lines banengi
     if (svgOverlay) svgOverlay.remove();
     svgOverlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svgOverlay.setAttribute('width', board.clientWidth);
@@ -350,18 +337,15 @@
     svgOverlay.style.position = 'absolute';
     svgOverlay.style.top = 0;
     svgOverlay.style.left = 0;
-    svgOverlay.style.pointerEvents = 'none'; // Click nahi hoga
+    svgOverlay.style.pointerEvents = 'none'; 
     svgOverlay.style.zIndex = 10; 
     board.appendChild(svgOverlay);
   }
   
   function drawPath(startCell, endCell, type) {
-    // Yeh function Bezier curve ka use karke thodi ghoomi hui line banata hai
-    // Logic is complex but required for curved look. (No change here)
     const start = getCellCoordinates(startCell);
     const end = getCellCoordinates(endCell);
     
-    // ... complex Bezier curve calculation logic ...
     const dx = end.x - start.x;
     const dy = end.y - start.y;
     const curveFactor = 0.3;
@@ -376,18 +360,45 @@
     path.setAttribute('class', type);
     svgOverlay.appendChild(path);
 
-    // Snake head or ladder rungs (Dande) banane ka code
-    // ... (This code is kept as is for functionality)
+    // This part handles drawing visual elements (snake head/ladder rungs) along the path
+    function bezierPoint(p0, p1, p2, p3, t) {
+      const cX = 3 * (p1 - p0);
+      const bX = 3 * (p2 - p1) - cX;
+      const aX = p3 - p0 - cX - bX;
+      return aX * t * t * t + bX * t * t + cX * t + p0;
+    }
+
+    if (type === 'snake') {
+      const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      head.setAttribute('cx', start.x);
+      head.setAttribute('cy', start.y);
+      head.setAttribute('r', 5);
+      head.setAttribute('class', 'snake-head');
+      svgOverlay.appendChild(head);
+    } else if (type === 'ladder') {
+      const steps = 6;
+      for(let i=1; i<steps; i++) {
+        const t = i/steps;
+        const tx = bezierPoint(start.x, cx1, cx2, end.x, t);
+        const ty = bezierPoint(start.y, cy1, cy2, end.y, t);
+        
+        const rung = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        rung.setAttribute('x1', tx - 6);
+        rung.setAttribute('y1', ty);
+        rung.setAttribute('x2', tx + 6);
+        rung.setAttribute('y2', ty);
+        rung.setAttribute('class', 'ladder-rung');
+        svgOverlay.appendChild(rung);
+      }
+    }
   }
 
   function drawSnakesAndLadders() {
     createSVGOverlay();
-    // Saare ladders aur snakes ko drawPath function se banata hai
     for (const [start, end] of Object.entries(ladders)) { drawPath(parseInt(start), end, 'ladder'); }
     for (const [start, end] of Object.entries(snakes)) { drawPath(parseInt(start), end, 'snake'); }
   }
 
-  // 5. Tokens Aur Position Update Karna
   function createTokens() {
     players.forEach(p => {
       const token = document.createElement('div');
@@ -402,13 +413,11 @@
     players.forEach(p => {
       const token = tokens[p.id];
       if (p.position === 0) {
-        // Token ko board ke bahar rakhta hai (Start position)
         token.style.transform = `translate(${cellSize/2 - 12}px, ${board.clientHeight + 10}px)`;
         token.style.opacity = 0;
       } else {
-        // Token ko naye cell coordinates par move karta hai
         const coords = getCellCoordinates(p.position);
-        const offsetX = p.id === 1 ? -6 : 6; // Dono tokens ko thoda alag rakhta hai
+        const offsetX = p.id === 1 ? -6 : 6; 
         const offsetY = p.id === 1 ? -6 : 6;
         token.style.transform = `translate(${coords.x + offsetX - 12}px, ${coords.y + offsetY - 12}px)`;
         token.style.opacity = 1;
@@ -417,42 +426,36 @@
   }
 
   function updatePlayersInfo() {
-    // Side panel mein player ki current position likhta hai
     players.forEach(p => {
       const posSpan = p.id === 1 ? player1PosSpan : player2PosSpan;
       posSpan.textContent = p.position === 0 ? 'Start' : (p.position === 100 ? 'WINNER!' : 'Tile ' + p.position);
     });
   }
 
-  // 6. Dice Roll Karna (Roll Dice Logic)
   function rollDice() {
     if (gameOver) return;
-    rollBtn.disabled = true; // Button disable karo
+    rollBtn.disabled = true; 
     message.textContent = `${players[currentPlayerIndex].name} rolling...`;
     
-    let rolls = 10; // Dice animation ke liye 10 baar ghumega
+    let rolls = 10; 
     const interval = setInterval(() => {
       const tempRoll = Math.floor(Math.random() * 6) + 1;
-      dice.textContent = tempRoll; // Dice number update karo
-      // Dice ko thoda ghumao
+      dice.textContent = tempRoll; 
       dice.style.transform = `rotate(${Math.random()*20 - 10}deg) scale(1.1)`; 
       rolls--;
       if (rolls <= 0) {
         clearInterval(interval);
         dice.style.transform = `rotate(0deg) scale(1)`;
-        processMove(tempRoll); // Final roll ke baad move karo
+        processMove(tempRoll); 
       }
     }, 80);
   }
 
-  // 7. Move Ko Process Karna (Main Game Logic)
   function processMove(roll) {
     const player = players[currentPlayerIndex];
     let newPos = player.position + roll;
     
-    // Animation delay - token ko smooth move karne ke liye
     setTimeout(() => {
-      // 7a. Agar 100 se zyada roll kiya
       if (newPos > BOARD_SIZE) {
         message.textContent = `Rolled ${roll}. Too high to finish!`;
       } else {
@@ -461,25 +464,22 @@
         let finalPos = newPos;
         let actionMsg = "";
         
-        // 7b. Ladder Check
         if (ladders[newPos]) {
             finalPos = ladders[newPos];
             actionMsg = " UP THE LADDER! 🚀";
         } 
-        // 7c. Snake Check
         else if (snakes[newPos]) {
             finalPos = snakes[newPos];
             actionMsg = " OOPS! SNAKE BITE! 🐍";
         }
 
-        player.position = finalPos; // Player ki position update karo
+        player.position = finalPos; 
         message.textContent += actionMsg;
       }
         
       updateTokens();
       updatePlayersInfo();
 
-      // 7d. Winner Check
       if (player.position === BOARD_SIZE) {
         message.textContent = `🎉 ${player.name} WINS THE GAME! 🎉`;
         message.style.color = "#d81b60";
@@ -488,19 +488,17 @@
         return;
       }
 
-      // 7e. Roll Again (If 6) ya Turn Switch
       if (roll === 6 && !gameOver) {
         message.textContent += ` Rolled 6! Roll again.`;
         rollBtn.disabled = false;
       } else {
-        currentPlayerIndex = (currentPlayerIndex + 1) % players.length; // Next player ki baari
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.length; 
         message.textContent = `${player.name}'s move completed. Now ${players[currentPlayerIndex].name}'s turn.`;
         rollBtn.disabled = false;
       }
-    }, 500); // Token movement ke liye thoda delay
+    }, 500); 
   }
 
-  // 8. Game Reset Karna
   function resetGame() {
     players.forEach(p => p.position = 0);
     currentPlayerIndex = 0;
@@ -513,10 +511,8 @@
     rollBtn.disabled = false;
   }
 
-  // 9. Game Shuru Karna (Initialization)
   function init() {
     createBoard();
-    // Wait for board rendering before drawing lines
     setTimeout(() => {
       drawSnakesAndLadders();
       createTokens();
@@ -524,10 +520,8 @@
     }, 100);
   }
 
-  // 10. Buttons Ke Actions
   rollBtn.addEventListener('click', rollDice);
   document.getElementById('reset-btn').addEventListener('click', resetGame);
-  // Screen resize hone par board refresh karna
   window.addEventListener('resize', () => { board.innerHTML = ''; init(); }); 
 
   init();
